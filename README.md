@@ -1,6 +1,4 @@
-# Hello World Skill
+# PLatform Patch Skill
 
 ## Usage:
-* `hello world`
-* `how are you`
-* `thank you`
+* `platform patch`
