@@ -34,7 +34,7 @@ class PlatformPatchSkill(MycroftSkill):
         platform_patch = IntentBuilder("PlatformPatchIntent"). \
             require("PlatformPatch").build()
         self.register_intent(platform_patch, self.patch_platform)
-        self.patch_platform()
+        self.patch_platform("")
 
     def patch_platform(self, message):
         self.platform_type = ConfigurationManager.instance().get("enclosure").get("platform")
