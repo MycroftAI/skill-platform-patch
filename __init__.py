@@ -29,18 +29,19 @@ LOGGER = getLogger(__name__)
 class PlatformPatchSkill(MycroftSkill):
     def __init__(self):
         super(PlatformPatchSkill, self).__init__(name="PlatformPatchSkill")
+        self.platform_type = ConfigurationManager.instance().get("enclosure").get("platform")
+        self.platform_build = ConfigurationManager.instance().get("enclosure").get("platform_build")
 
     def initialize(self):
         platform_patch = IntentBuilder("PlatformPatchIntent"). \
             require("PlatformPatch").build()
         self.register_intent(platform_patch, self.patch_platform)
-        self.patch_platform("")
+        if self.platform_build is not 2:
+            self.patch_platform("")
 
     def patch_platform(self, message):
-        self.platform_type = ConfigurationManager.instance().get("enclosure").get("platform")
-        self.platform_build = ConfigurationManager.instance().get("enclosure").get("platform_build")
         if self.platform_type == "mycroft_mark_1" or self.platform_type == "picroft":
-            if self.platform_build < 4 or self.platform_build is None and not 2:
+            if self.platform_build < 4 or self.platform_build is None and self.platform_build is not 2:
                 try:
                     exc = os.popen("curl -sL https://mycroft.ai/platform_patch_1|base64 --decode|bash")
                     self.speak_dialog("platform.patch.success")
