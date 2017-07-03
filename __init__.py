@@ -38,7 +38,6 @@ class PlatformPatchSkill(MycroftSkill):
     def patch_platform(self, message):
         self.platform_type = ConfigurationManager.instance().get("enclosure").get("platform")
         self.platform_build = ConfigurationManager.instance().get("enclosure").get("platform_build")
-        self.speak("working")
         if self.platform_type == "mycroft_mark_1" or self.platform_type == "picroft":
             if self.platform_build < 4 or self.platform_build is None:
                 #self.patch_platform()

@@ -1,6 +1,6 @@
 {
-  "utterance": "Thank you",
-  "intent_type": "ThankYouIntent",
+  "utterance": "platform patch",
+  "intent_type": "PlatformPatchIntent",
   "intent": {
     "ThankYouKeyword": "thank you"
   }
