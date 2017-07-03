@@ -40,17 +40,13 @@ class PlatformPatchSkill(MycroftSkill):
         self.platform_type = ConfigurationManager.instance().get("enclosure").get("platform")
         self.platform_build = ConfigurationManager.instance().get("enclosure").get("platform_build")
         if self.platform_type == "mycroft_mark_1" or self.platform_type == "picroft":
-            if self.platform_build < 4 or self.platform_build is None:
-                #self.patch_platform()
+            if self.platform_build < 4 or self.platform_build is None and not 2:
                 try:
                     exc = os.popen("curl -sL https://mycroft.ai/platform_patch_1|base64 --decode|bash")
-                    #print exc.close()
                     self.speak_dialog("platform.patch.success")
                 except:
                     self.speak_dialog("platform.patch.failure")
                     pass
-            elif self.platform_build is 2:
-                pass
         else:
             self.speak_dialog("platform.patch.not.possible")
 
