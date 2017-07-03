@@ -1,4 +1,4 @@
-# PLatform Patch Skill
+# Platform Patch Skill
 
 ## Usage:
 * `platform patch`
