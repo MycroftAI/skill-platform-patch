@@ -36,12 +36,13 @@ class PlatformPatchSkill(MycroftSkill):
         platform_patch = IntentBuilder("PlatformPatchIntent"). \
             require("PlatformPatch").build()
         self.register_intent(platform_patch, self.patch_platform)
-        if self.platform_build is not 2:
+        if self.platform_build is None or self.platform_build != 2:
             self.patch_platform("")
 
     def patch_platform(self, message):
         if self.platform_type == "mycroft_mark_1" or self.platform_type == "picroft":
-            if self.platform_build < 4 or self.platform_build is None and self.platform_build is not 2:
+            if self.platform_build is None or (self.platform_build < 4 and
+                    self.platform_build != 2):
                 try:
                     exc = os.popen("curl -sL https://mycroft.ai/platform_patch_1|base64 --decode|bash")
                     self.speak_dialog("platform.patch.success")
