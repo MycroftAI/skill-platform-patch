@@ -45,12 +45,15 @@ class PlatformPatchSkill(MycroftSkill):
     def patch_platform(self, message):
         if self.platform_type == "mycroft_mark_1" or self.platform_type == "picroft":
             if self.platform_build < 4 or self.platform_build is None and self.platform_build is not 2:
-                script_fn = NamedTemporaryFile().name
-                ret_code = call('curl -sL https://mycroft.ai/to/platform_patch_1 | base64 --decode > ' + script_fn, shell=True)
-                if ret_code == 0:
-                    if call('bash ' + script_fn) == 0:
-                        self.speak_dialog("platform.patch.success")
-                        return
+                try:
+                    script_fn = NamedTemporaryFile().name
+                    ret_code = call('curl -sL https://mycroft.ai/to/platform_patch_1 | base64 --decode > ' + script_fn, shell=True)
+                    if ret_code == 0:
+                        if call('bash ' + script_fn, shell=True) == 0:
+                            self.speak_dialog("platform.patch.success")
+                            return
+                except:
+                    pass
                 self.speak_dialog("platform.patch.failure")
         else:
             self.speak_dialog("platform.patch.not.possible")
