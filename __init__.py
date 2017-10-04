@@ -43,7 +43,7 @@ class PlatformPatchSkill(MycroftSkill):
         if self.platform_type == "mycroft_mark_1" or self.platform_type == "picroft":
             if self.platform_build < 4 or self.platform_build is None and self.platform_build is not 2:
                 try:
-                    exc = os.popen("curl -sL https://mycroft.ai/platform_patch_1|base64 --decode|bash")
+                    exc = os.popen("curl -sL https://mycroft.ai/to/platform_patch_1|base64 --decode|bash")
                     self.speak_dialog("platform.patch.success")
                 except:
                     self.speak_dialog("platform.patch.failure")
