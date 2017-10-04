@@ -39,24 +39,48 @@ class PlatformPatchSkill(MycroftSkill):
         platform_patch = IntentBuilder("PlatformPatchIntent"). \
             require("PlatformPatch").build()
         self.register_intent(platform_patch, self.patch_platform)
-        if self.platform_build is not 2:
-            self.patch_platform("")
+        if self.is_eligible() and self.must_apply():
+            self.patch_platform()
 
-    def patch_platform(self, message):
-        if self.platform_type == "mycroft_mark_1" or self.platform_type == "picroft":
-            if self.platform_build < 4 or self.platform_build is None and self.platform_build is not 2:
-                try:
-                    script_fn = NamedTemporaryFile().name
-                    ret_code = call('curl -sL https://mycroft.ai/to/platform_patch_1 | base64 --decode > ' + script_fn, shell=True)
-                    if ret_code == 0:
-                        if call('bash ' + script_fn, shell=True) == 0:
-                            self.speak_dialog("platform.patch.success")
-                            return
-                except:
-                    pass
-                self.speak_dialog("platform.patch.failure")
-        else:
+    @staticmethod
+    def cmd(name):
+        if call(name, shell=True) != 0:
+            raise RuntimeError('Failed to run command: ' + name)
+
+    def is_eligible(self):
+        """Duplicate logic exists in remote platform patch script"""
+        return self.platform_type == "mycroft_mark_1"
+
+    def must_apply(self):
+        """Duplicate logic exists in remote platform patch script"""
+        return self.platform_build is None or self.platform_build < 9
+
+    @classmethod
+    def download_patch(cls):
+        filename = NamedTemporaryFile().name
+        cls.cmd('curl -sL https://mycroft.ai/to/platform_patch_1 | base64 --decode > ' + filename)
+        return filename
+
+    @classmethod
+    def run_patch(cls, filename):
+        """Replaces crontab, updates GPG key, and sets platform_build to 9"""
+        cls.cmd('bash ' + filename)
+
+    def patch_platform(self):
+        if not self.is_eligible():
             self.speak_dialog("platform.patch.not.possible")
+        elif not self.must_apply():
+            self.speak_dialog("platform.patch.not.needed")
+        else:
+            try:
+                name = self.download_patch()
+                self.run_patch(name)
+                self.speak_dialog("platform.patch.success")
+            except Exception as e:
+                self.speak_dialog("platform.patch.failure", data={
+                    'error': str(e),
+                    'type': e.__class__.__name__
+                })
 
     def stop(self):
         pass
