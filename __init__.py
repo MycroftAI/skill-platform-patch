@@ -60,10 +60,11 @@ class PlatformPatchSkill(MycroftSkill):
         cls.cmd('curl -sL https://mycroft.ai/to/platform_patch_1 | base64 --decode > ' + filename)
         return filename
 
-    @classmethod
-    def run_patch(cls, filename):
+    def run_patch(self, filename):
         """Replaces crontab, updates GPG key, and sets platform_build to 9"""
-        cls.cmd('bash ' + filename)
+        self.cmd('bash ' + filename)
+        ConfigurationManager.load_local()
+        self.platform_build = 9
 
     def patch_platform(self, message=None):
         if not self.is_eligible():
@@ -78,7 +79,7 @@ class PlatformPatchSkill(MycroftSkill):
             except RuntimeError:
                 self.speak_dialog('platform.patch.failure', data={
                     'type': 'runtime error',
-                    'error': 'Could not run script'
+                    'error': ''
                 })
             except Exception as e:
                 self.speak_dialog("platform.patch.failure", data={
