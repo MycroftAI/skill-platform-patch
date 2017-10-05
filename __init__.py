@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Mycroft Core.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 from tempfile import NamedTemporaryFile
 from subprocess import call
 
@@ -66,7 +65,7 @@ class PlatformPatchSkill(MycroftSkill):
         """Replaces crontab, updates GPG key, and sets platform_build to 9"""
         cls.cmd('bash ' + filename)
 
-    def patch_platform(self):
+    def patch_platform(self, message=None):
         if not self.is_eligible():
             self.speak_dialog("platform.patch.not.possible")
         elif not self.must_apply():
@@ -76,6 +75,11 @@ class PlatformPatchSkill(MycroftSkill):
                 name = self.download_patch()
                 self.run_patch(name)
                 self.speak_dialog("platform.patch.success")
+            except RuntimeError:
+                self.speak_dialog('platform.patch.failure', data={
+                    'type': 'runtime error',
+                    'error': 'Could not run script'
+                })
             except Exception as e:
                 self.speak_dialog("platform.patch.failure", data={
                     'error': str(e),
