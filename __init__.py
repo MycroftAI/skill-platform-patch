@@ -19,9 +19,10 @@ from tempfile import NamedTemporaryFile
 from subprocess import call
 
 from adapt.intent import IntentBuilder
-from mycroft.configuration import ConfigurationManager
+from mycroft.configuration import Configuration
 from mycroft.skills.core import MycroftSkill
 from mycroft.util.log import getLogger
+from mycroft.messagebus.message import Message
 
 __author__ = 'aatchison'
 
@@ -31,8 +32,8 @@ LOGGER = getLogger(__name__)
 class PlatformPatchSkill(MycroftSkill):
     def __init__(self):
         super(PlatformPatchSkill, self).__init__(name="PlatformPatchSkill")
-        self.platform_type = ConfigurationManager.instance().get("enclosure").get("platform")
-        self.platform_build = ConfigurationManager.instance().get("enclosure").get("platform_build")
+        self.platform_type = Configuration.get().get("enclosure").get("platform")
+        self.platform_build = Configuration.get().get("enclosure").get("platform_build")
 
     def initialize(self):
         platform_patch = IntentBuilder("PlatformPatchIntent"). \
@@ -63,7 +64,7 @@ class PlatformPatchSkill(MycroftSkill):
     def run_patch(self, filename):
         """Replaces crontab, updates GPG key, and sets platform_build to 9"""
         self.cmd('bash ' + filename)
-        ConfigurationManager.load_local()
+        self.emitter.emit(Message('configuration.updated'))
         self.platform_build = 9
 
     def patch_platform(self, message=None):
