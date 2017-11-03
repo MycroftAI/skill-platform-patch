@@ -22,6 +22,7 @@ from adapt.intent import IntentBuilder
 from mycroft.configuration import ConfigurationManager
 from mycroft.skills.core import MycroftSkill
 from mycroft.util.log import getLogger
+from mycroft.messagebus.message import Message
 
 __author__ = 'aatchison'
 
@@ -63,7 +64,10 @@ class PlatformPatchSkill(MycroftSkill):
     def run_patch(self, filename):
         """Replaces crontab, updates GPG key, and sets platform_build to 9"""
         self.cmd('bash ' + filename)
-        ConfigurationManager.load_local()
+        try:
+            ConfigurationManager.load_local()
+        except AttributeError:
+            self.emitter.emit(Message('configuration.updated'))
         self.platform_build = 9
 
     def patch_platform(self, message=None):
