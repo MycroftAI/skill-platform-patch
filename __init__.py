@@ -104,7 +104,6 @@ class PlatformPatchSkill(MycroftSkill):
             self.timer.cancel()
         self.timer = Timer(60, self._force_update_message)
         self.timer.start()
-        pass
 
 
 def create_skill():
