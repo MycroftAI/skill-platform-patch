@@ -1,1 +1,1 @@
-Platform patch failed because of a {{type}}. {{error}}
+The patch failed because of a {{type}}. {{error}}

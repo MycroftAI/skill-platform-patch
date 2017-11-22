@@ -1,38 +1,34 @@
-# Copyright 2016 Mycroft AI, Inc.
+# Copyright 2017, Mycroft AI Inc.
 #
-# This file is part of Mycroft Core.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Mycroft Core is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+#    http://www.apache.org/licenses/LICENSE-2.0
 #
-# Mycroft Core is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Mycroft Core.  If not, see <http://www.gnu.org/licenses/>.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from tempfile import NamedTemporaryFile
 from subprocess import call
+from threading import Timer
 
 from adapt.intent import IntentBuilder
 from mycroft.configuration import ConfigurationManager
 from mycroft.skills.core import MycroftSkill
-from mycroft.util.log import getLogger
-
-__author__ = 'aatchison'
-
-LOGGER = getLogger(__name__)
 
 
 class PlatformPatchSkill(MycroftSkill):
     def __init__(self):
         super(PlatformPatchSkill, self).__init__(name="PlatformPatchSkill")
-        self.platform_type = ConfigurationManager.instance().get("enclosure").get("platform")
-        self.platform_build = ConfigurationManager.instance().get("enclosure").get("platform_build")
+        self.platform_type = ConfigurationManager.instance().get(
+                                "enclosure").get("platform")
+        self.platform_build = ConfigurationManager.instance().get(
+                                "enclosure").get("platform_build")
+        self.timer = None
 
     def initialize(self):
         platform_patch = IntentBuilder("PlatformPatchIntent"). \
@@ -47,21 +43,25 @@ class PlatformPatchSkill(MycroftSkill):
             raise RuntimeError('Failed to run command: ' + name)
 
     def is_eligible(self):
-        """Duplicate logic exists in remote platform patch script"""
+        # This only make sense to run on a Mark 1
         return self.platform_type == "mycroft_mark_1"
 
     def must_apply(self):
-        """Duplicate logic exists in remote platform patch script"""
+        # This should be run for any Mark 1 with a version # before 9
         return self.platform_build is None or self.platform_build < 9
 
     @classmethod
     def download_patch(cls):
         filename = NamedTemporaryFile().name
-        cls.cmd('curl -sL https://mycroft.ai/to/platform_patch_1 | base64 --decode > ' + filename)
+        cls.cmd('curl -sL https://mycroft.ai/to/platform_patch_1 | base64 --decode > ' + filename)  # nopep8
         return filename
 
     def run_patch(self, filename):
-        """Replaces crontab, updates GPG key, and sets platform_build to 9"""
+        # In brief, the patch:
+        # - Replaces the crontab (run hourly instead of once a day)
+        # - Updates the GPG key for the Mycroft repo
+        # - Bumps the platform_build to '9'
+        self.log.info("Attempting platform patch...")
         self.cmd('bash ' + filename)
         ConfigurationManager.load_local()
         self.platform_build = 9
@@ -76,18 +76,34 @@ class PlatformPatchSkill(MycroftSkill):
                 name = self.download_patch()
                 self.run_patch(name)
                 self.speak_dialog("platform.patch.success")
+                self.log.info("Patch successful")
+
+                # Now show a message until the unit reboots
+                self._force_update_message()
+
             except RuntimeError:
+                self.log.info("Patch runtime error")
                 self.speak_dialog('platform.patch.failure', data={
                     'type': 'runtime error',
                     'error': ''
                 })
             except Exception as e:
+                self.log.info("Patch failure")
                 self.speak_dialog("platform.patch.failure", data={
                     'error': str(e),
                     'type': e.__class__.__name__
                 })
 
-    def stop(self):
+    def _force_update_message(self):
+        # This message will be shown every 60 seconds until the
+        # system restarts due to the pending apt install of a new
+        # version of mycroft-core.
+        self.enclosure.deactivate_mouth_events()
+        self.enclosure.mouth_text("UPDATING...")
+        if self.timer and self.timer.is_alive():
+            self.timer.cancel()
+        self.timer = Timer(60, self._force_update_message)
+        self.timer.start()
         pass
 
 
