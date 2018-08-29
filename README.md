@@ -1,4 +1,4 @@
-# <img src='https://rawgithub.com/FortAwesome/Font-Awesome/master/advanced-options/raw-svg/solid/cog.svg ' card_color='#22a7f0' width='50' height='50' style='vertical-align:bottom'/> Platform Patch
+# <img src='https://rawgithub.com/FortAwesome/Font-Awesome/master/advanced-options/raw-svg/solid/cog.svg' card_color='#22a7f0' width='50' height='50' style='vertical-align:bottom'/> Platform Patch
 Updates original Mark 1 devices so they can upgrade to the latest version of Mycroft.
 
 ## About 
