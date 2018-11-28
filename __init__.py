@@ -63,7 +63,10 @@ class PlatformPatchSkill(MycroftSkill):
         # - Bumps the platform_build to '9'
         self.log.info("Attempting platform patch...")
         self.cmd('bash ' + filename)
-        ConfigurationManager.load_local()
+        try:
+            ConfigurationManager.load_local()
+        except AttributeError:
+            self.emitter.emit(Message('configuration.updated'))
         self.platform_build = 9
 
     def patch_platform(self, message=None):
